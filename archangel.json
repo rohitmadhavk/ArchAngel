@@ -1,0 +1,8 @@
+{
+  "name": "ArchAngel Demo",
+  "version": "1.0.0",
+  "repositories": [
+    "https://github.com/microsoft/vscode",
+    "https://github.com/microsoft/typescript"
+  ]
+}

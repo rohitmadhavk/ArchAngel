@@ -1,0 +1,6 @@
+@ArchAngel.Service_HostAddress = http://localhost:5079
+
+GET {{ArchAngel.Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

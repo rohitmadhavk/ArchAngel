@@ -66,7 +66,7 @@ TypeScript, JavaScript, Python, C#, Java, C, C++, Go, Rust, HTML, CSS, SCSS, JSO
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │ Chat          — FoundryChatService / SKChatService   │   │
-│  │ Completion    — FoundryCompletionService / SK        │   │
+│  │ Completion    — FoundryCompletionService / SKCompletionService        │   │
 │  │ DocumentGen   — SKDocumentGenerationService          │   │
 │  │ Github        — RepositoryIndexer, ContentProcessor  │   │
 │  │ Utils         — GoldenRepoSearchService, Citations   │   │
@@ -355,4 +355,4 @@ Built with:
 - [Azure AI Foundry SDK](https://learn.microsoft.com/azure/ai-studio/)
 - [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service/)
 - [StreamJsonRpc](https://github.com/microsoft/vs-streamjsonrpc) (LSP transport)
-- [.NET 9](https://dotnet.microsoft.com/)# ArchAngel
+- [.NET 9](https://dotnet.microsoft.com/)

@@ -1,0 +1,38 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ArchAngel.Contracts", "ArchAngel.Contracts", "{D33A6BF7-D8D8-1BFA-9CE7-9F5709E88285}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ArchAngel.Service", "ArchAngel.Service", "{023300A2-9830-C058-C326-09864247C75B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchAngel.Contracts", "ArchAngel.Contracts\ArchAngel.Contracts\ArchAngel.Contracts.csproj", "{FA7C5947-B0A6-6CFB-15A9-220C2623EBDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchAngel.Service", "ArchAngel.Service\ArchAngel.Service\ArchAngel.Service.csproj", "{F99F670F-532A-BC69-3801-DD9178556FBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA7C5947-B0A6-6CFB-15A9-220C2623EBDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA7C5947-B0A6-6CFB-15A9-220C2623EBDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA7C5947-B0A6-6CFB-15A9-220C2623EBDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA7C5947-B0A6-6CFB-15A9-220C2623EBDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F99F670F-532A-BC69-3801-DD9178556FBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F99F670F-532A-BC69-3801-DD9178556FBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F99F670F-532A-BC69-3801-DD9178556FBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F99F670F-532A-BC69-3801-DD9178556FBB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FA7C5947-B0A6-6CFB-15A9-220C2623EBDF} = {D33A6BF7-D8D8-1BFA-9CE7-9F5709E88285}
+		{F99F670F-532A-BC69-3801-DD9178556FBB} = {023300A2-9830-C058-C326-09864247C75B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B48E3616-87E1-4E1B-ACAF-3C14C53609DC}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,232 @@
+{
+  "name": "archangel",
+  "displayName": "ArchAngel", 
+  "description": "AI powered iterative coding assistant",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",  
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",   
+    "onLanguage:python",
+    "onLanguage:csharp",
+    "onLanguage:java",
+    "onLanguage:cpp",
+    "onLanguage:c",
+    "onLanguage:go",
+    "onLanguage:rust",
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:scss",
+    "onLanguage:json",
+    "onLanguage:xml",
+    "onLanguage:yaml",
+    "onLanguage:markdown"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "archangel-sidebar": [
+        {
+          "id": "archangel.chatView",
+          "name": "Chat",
+          "type": "webview"
+        },
+        {
+          "id": "archangel.settingsView",
+          "name": "Knowledge Base Settings",
+          "type": "webview"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "archangel-sidebar",
+          "title": "ArchAngel",
+          "icon": "$(robot)"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "archangel.generateCodeStyleDoc", 
+        "title": "🏗️ Generate a Code Style Document for your Golden Repos",
+        "category": "ArchAngel"
+      },
+      {
+        "command": "archangel.generateWikiDoc", 
+        "title": "🏗️ Generate a Wiki Document for your Golden Repos",
+        "category": "ArchAngel"
+      },
+      
+      {
+        "command": "archangel.chat",
+        "title": "Chat with ArchAngel"
+      },
+      
+      {
+        "command": "archangel.indexFromConfig",
+        "title": "Index Repositories from Config",
+        "category": "ArchAngel"
+      },
+      {
+        "command": "archangel.openChat",
+        "title": "Open Chat",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "archangel.addRepository",
+        "title": "Add Repository to Knowledge Base",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "archangel.refreshKnowledgeBase",
+        "title": "Refresh Knowledge Base",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "archangel.wipeKnowledgeBase",
+        "title": "🗑️ Wipe Knowledge Base",
+        "category": "ArchAngel"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "archangel.openChat",
+          "when": "view == archangel.chatView",
+          "group": "navigation"
+        },
+        {
+          "command": "archangel.addRepository",
+          "when": "view == archangel.settingsView",
+          "group": "navigation"
+        },
+        {
+          "command": "archangel.refreshKnowledgeBase",
+          "when": "view == archangel.settingsView",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+            "command": "archangel.addRepository"
+          },
+          {
+            "command": "archangel.refreshKnowledgeBase"
+          }          
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "ArchAngel",
+      "properties": {
+        "archAngel.knowledgeBase.repositories": {
+          "type": "array",
+          "default": [],
+          "description": "List of GitHub repositories to use as knowledge base",
+          "items": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "description": "Repository owner"
+              },
+              "name": {
+                "type": "string", 
+                "description": "Repository name"
+              },
+              "branch": {
+                "type": "string",
+                "description": "Branch to index (optional)"
+              },
+              "enabled": {
+                "type": "boolean",
+                "description": "Whether this repository is enabled"
+              },
+              "status": {
+                "type": "string",
+                "description": "Indexing status",
+                "enum": ["pending", "indexing", "indexed", "error"]
+              },
+              "lastIndexed": {
+                "type": "string",
+                "description": "ISO string of when repository was last indexed"
+              }
+            },
+            "required": ["owner", "name", "enabled"]
+          }
+        },
+        "archAngel.github.token": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub Personal Access Token for accessing private repositories (stored securely)"
+        },
+        "archAngel.knowledgeBase.maxFileSize": {
+          "type": "number",
+          "default": 100000,
+          "description": "Maximum file size in bytes to index from repositories"
+        },
+        "archAngel.knowledgeBase.chunkSize": {
+          "type": "number",
+          "default": 1000,
+          "description": "Maximum chunk size for indexing repository content"
+        },
+        "archAngel.knowledgeBase.autoIndex": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically index enabled repositories on startup"
+        },
+        "archAngel.knowledgeBase.includedFileTypes": {
+          "type": "array",
+          "default": [".cs", ".ts", ".js", ".py", ".java", ".cpp", ".c", ".h", ".hpp", ".go", ".rs", ".php", ".rb", ".swift", ".kt", ".scala", ".clj", ".fs", ".vb", ".sql", ".json", ".xml", ".yaml", ".yml", ".md", ".txt"],
+          "description": "File extensions to include when indexing repositories",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ArchAngel.Service.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "Custom endpoint for ArchAngel service (leave empty for default)"
+        },
+        "archAngel.logging.level": {
+          "type": "string",
+          "default": "Info",
+          "description": "Logging level for ArchAngel",
+          "enum": ["Error", "Warning", "Info", "Debug"]
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.104.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.34.0",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

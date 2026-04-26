@@ -1,0 +1,40 @@
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+.env
+*.env
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+.env
+*.env
+.env.local
+.env.*.local
+
+# C# build artifacts
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.user
+*.suo
+*.cache
+.vs/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.ca
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
