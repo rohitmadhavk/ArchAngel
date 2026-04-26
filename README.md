@@ -186,7 +186,7 @@ archangel/
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/rohitmadhavk/archangel.git
+   git clone https://github.com/rohitmadhavk/ArchAngel.git
    cd archangel
    ```
 
