@@ -2,6 +2,9 @@
 
 **AI-powered iterative coding assistant** — A VS Code extension that leverages Azure AI Foundry, Azure OpenAI, and Semantic Kernel to provide intelligent code analysis, guidance, and best-practice recommendations grounded in your team's "golden" repositories. Please keep in mind that this is a work in progress project that can and is intended to be configured to your needs. Please fork this project to build out your projects. 
 
+> [!IMPORTANT]
+> There are very few packages used in this project, if any, and that is by design so that you may decide on the packages that you wish to use for your best experience, aligned to your security posture. 
+
 ## Table of Contents
 
 - [Features](#features)
