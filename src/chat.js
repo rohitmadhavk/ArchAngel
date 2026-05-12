@@ -1,5 +1,3 @@
-// Replace the entire file with this enhanced version:
-
 // Error handler to catch any JavaScript errors
 window.onerror = function(message, source, lineno, colno, error) {
     console.error('[WEBVIEW] JavaScript Error:', { message, source, lineno, colno, error });
@@ -31,12 +29,6 @@ const typingIndicator = document.getElementById('typingIndicator');
 const debugInfo = document.getElementById('debugInfo');
 
 let messageCount = 0;
-
-// Enhanced markdown parser
-// Replace the parseMarkdown function (around lines 18-80) with this enhanced version:
-
-// Enhanced markdown parser
-// Replace the parseMarkdown function (around lines 25-110) with this corrected version:
 
 // Enhanced markdown parser
 function parseMarkdown(text) {
@@ -93,9 +85,12 @@ function parseMarkdown(text) {
     html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
     html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
     
-    // Code blocks (``` code ```) - handle before other processing
+    // Code blocks (``` code ```) - handle before other processing.
+    // The language tag is restricted to a conservative charset so it can't
+    // break out of the data-language attribute (e.g. via `" onmouseover=...`).
     html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        const language = lang ? ` data-language="${lang}"` : '';
+        const safeLang = lang && /^[A-Za-z0-9_+\-]{1,32}$/.test(lang) ? lang : '';
+        const language = safeLang ? ` data-language="${safeLang}"` : '';
         return `<pre${language}><code>${code.trim()}</code></pre>`;
     });
     
@@ -110,8 +105,23 @@ function parseMarkdown(text) {
     html = html.replace(/(?<!^[\s]*[-*+]\s.*)\*([^*\n]+)\*(?!.*)/g, '<em>$1</em>');
     html = html.replace(/(?<!^[\s]*[-*+]\s.*)_([^_\n]+)_(?!.*)/g, '<em>$1</em>');
     
-    // Links [text](url)
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    // Links [text](url) — only allow http(s) and relative URLs. Anything else
+    // (javascript:, data:, vbscript:, file:, etc.) is rendered as plain text.
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
+        const trimmed = url.trim();
+        const isSafe = /^https?:\/\//i.test(trimmed) || /^(\/|\.\/|\.\.\/|#|\?)/.test(trimmed);
+        if (!isSafe) {
+            return `${label} (${trimmed})`;
+        }
+        // Escape quotes and angle brackets so the URL can't break out of the attribute.
+        const safeHref = trimmed
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
     
     // Blockquotes (> text)
     html = html.replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>');
@@ -207,18 +217,41 @@ function addMessageWithSources(content, isUser = false, sources = null, reposito
         sources.forEach((source, index) => {
             const sourceItem = document.createElement('div');
             sourceItem.className = 'source-item';
-            
-            sourceItem.innerHTML = `
-                <span class="source-number">${index + 1}.</span>
-                <a href="${source.githubUrl || '#'}" target="_blank" class="source-link">
-                    ${source.filePath}
-                </a>
-                <span class="source-details">
-                    (${source.language}, lines ${source.startLine}-${source.endLine})
-                </span>
-                <span class="source-repo">[${source.repository}]</span>
-            `;
-            
+
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'source-number';
+            numberSpan.textContent = `${index + 1}.`;
+            sourceItem.appendChild(numberSpan);
+
+            sourceItem.appendChild(document.createTextNode(' '));
+
+            const link = document.createElement('a');
+            link.className = 'source-link';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            // Only allow http(s) URLs in the href to block javascript:/data: schemes.
+            const rawUrl = typeof source.githubUrl === 'string' ? source.githubUrl : '';
+            link.href = /^https?:\/\//i.test(rawUrl) ? rawUrl : '#';
+            link.textContent = String(source.filePath ?? '');
+            sourceItem.appendChild(link);
+
+            sourceItem.appendChild(document.createTextNode(' '));
+
+            const details = document.createElement('span');
+            details.className = 'source-details';
+            const lang = String(source.language ?? '');
+            const startLine = String(source.startLine ?? '');
+            const endLine = String(source.endLine ?? '');
+            details.textContent = `(${lang}, lines ${startLine}-${endLine})`;
+            sourceItem.appendChild(details);
+
+            sourceItem.appendChild(document.createTextNode(' '));
+
+            const repoSpan = document.createElement('span');
+            repoSpan.className = 'source-repo';
+            repoSpan.textContent = `[${String(source.repository ?? '')}]`;
+            sourceItem.appendChild(repoSpan);
+
             sourcesList.appendChild(sourceItem);
         });
         
@@ -228,7 +261,9 @@ function addMessageWithSources(content, isUser = false, sources = null, reposito
         // Show that RAG was attempted but no sources found
         const noSourcesDiv = document.createElement('div');
         noSourcesDiv.className = 'no-sources';
-        noSourcesDiv.innerHTML = `<em>Searched ${repositoryCount} repositories - no specific code references found</em>`;
+        const em = document.createElement('em');
+        em.textContent = `Searched ${Number(repositoryCount) || 0} repositories - no specific code references found`;
+        noSourcesDiv.appendChild(em);
         messageDiv.appendChild(noSourcesDiv);
     }
     

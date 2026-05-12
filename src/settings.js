@@ -7,13 +7,27 @@ const repoUrlInput = document.getElementById('repoUrl');
 const repoBranchInput = document.getElementById('repoBranch');
 const addRepoBtn = document.getElementById('addRepoBtn');
 const refreshAllBtn = document.getElementById('refreshAllBtn');
+const syncRepoBtn = document.getElementById('syncRepoBtn');
 const repoContainer = document.getElementById('repoContainer');
+const useVSCodeAuthBtn = document.getElementById('useVSCodeAuthBtn');
+const checkAuthStatusBtn = document.getElementById('checkAuthStatusBtn');
 
 let repositories = [];
 
 // Event listeners
-addRepoBtn.addEventListener('click', addRepository);
-refreshAllBtn.addEventListener('click', refreshAllRepositories);
+addRepoBtn?.addEventListener('click', addRepository);
+refreshAllBtn?.addEventListener('click', refreshAllRepositories);
+syncRepoBtn?.addEventListener('click',syncRepositories);
+useVSCodeAuthBtn?.addEventListener('click',useVSCodeAuth);
+checkAuthStatusBtn?.addEventListener('click',checkAuth);
+
+document.querySelectorAll('.demo-repo').forEach(el => {
+    el.addEventListener('click', () => {
+        const owner = el.getAttribute('data-owner');
+        const name = el.getAttribute('data-name');
+        if (owner && name) addDemoRepo(owner, name);
+    });
+});
 
 // Handle messages from extension
 window.addEventListener('message', event => {
@@ -83,7 +97,7 @@ function updateAuthStatus(status) {
     
     if (status.authenticated) {
         indicator.className = 'status-indicator status-authenticated';
-        const methodNames = (status.methods || []).map(m => m.method).join(', ');
+        const methodNames = (status.methods || []).map(m => String(m.method ?? '')).join(', ');
         text.textContent = 'Authenticated (' + methodNames + ')';
         console.log('[SETTINGS] Set to authenticated with methods:', methodNames);
     } else {
@@ -92,12 +106,16 @@ function updateAuthStatus(status) {
         console.log('[SETTINGS] Set to unauthenticated');
     }
     
+    // Build recommendations list via DOM APIs to avoid HTML injection.
+    recommendationsElement.replaceChildren();
     if (status.recommendations && status.recommendations.length > 0) {
-        recommendationsElement.innerHTML = '<ul>' + 
-            status.recommendations.map(rec => '<li>' + rec + '</li>').join('') + 
-            '</ul>';
-    } else {
-        recommendationsElement.innerHTML = '';
+        const ul = document.createElement('ul');
+        for (const rec of status.recommendations) {
+            const li = document.createElement('li');
+            li.textContent = String(rec ?? '');
+            ul.appendChild(li);
+        }
+        recommendationsElement.appendChild(ul);
     }
 }
 
@@ -201,7 +219,6 @@ function parseRepositoryUrl(input) {
 
     return null;
 }
-// Add this function to settings.js
 
 function syncRepositories() {
     console.log('[SETTINGS] syncRepositories called');
@@ -210,87 +227,102 @@ function syncRepositories() {
     });
 }
 
+// Allow-list for status values used in CSS class names. Anything outside this
+// set falls back to 'pending' so attacker-controlled status values can't be
+// injected into the class attribute.
+const ALLOWED_STATUSES = new Set(['pending', 'indexing', 'indexed', 'error']);
+
 function renderRepositories() {
     console.log('[SETTINGS] renderRepositories called with:', repositories);
-    
+
+    // Clear previous contents without using innerHTML.
+    repoContainer.replaceChildren();
+
     if (repositories.length === 0) {
-        repoContainer.innerHTML = `
-            <div class="empty-state">
-                <p>No repositories added yet. Add a repository above to get started.</p>
-            </div>
-        `;
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        const p = document.createElement('p');
+        p.textContent = 'No repositories added yet. Add a repository above to get started.';
+        empty.appendChild(p);
+        repoContainer.appendChild(empty);
         return;
     }
 
-    const html = repositories.map(repo => {
-        // Debug: Log what we're trying to render for each repo
-        console.log('[SETTINGS] Rendering repo:', repo.owner + '/' + repo.name);
-        console.log('[SETTINGS] Owner:', JSON.stringify(repo.owner));
-        console.log('[SETTINGS] Name:', JSON.stringify(repo.name));
-        
-        // Use double quotes for the outer template and escape any quotes in the data
-        const safeOwner = repo.owner.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const safeName = repo.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const safeBranch = (repo.branch || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        
-        const repoHtml = `
-        <div class="repo-item">
-            <div class="repo-info">
-                <div class="repo-name">${repo.owner}/${repo.name}</div>
-                <div class="repo-status">
-                    ${repo.branch ? `Branch: ${repo.branch} • ` : ''}
-                    <span class="status-indicator status-${repo.status || 'pending'}">
-                        ${getStatusText(repo.status)}
-                    </span>
-                    ${repo.lastIndexed ? ` • Last indexed: ${new Date(repo.lastIndexed).toLocaleString()}` : ''}
-                </div>
-            </div>
-            <div class="repo-actions">
-                <label class="toggle-switch">
-                    <input type="checkbox" ${repo.enabled ? 'checked' : ''} 
-                           onchange="toggleRepository('${safeOwner}', '${safeName}', this.checked)">
-                    <span class="slider"></span>
-                </label>
-                <button class="btn btn-secondary" 
-                        onclick="indexRepository('${safeOwner}', '${safeName}', '${safeBranch}')"
-                        ${repo.status === 'indexing' ? 'disabled' : ''}>
-                    ${repo.status === 'indexing' ? 'Indexing...' : 'Index'}
-                </button>
-                <button class="btn btn-danger" 
-                        onclick="removeRepository('${safeOwner}', '${safeName}')">
-                    Remove
-                </button>
-            </div>
-        </div>`;
-        
-        // Debug: Log the generated HTML for the remove button specifically
-        const removeButtonMatch = repoHtml.match(/<button[^>]*onclick="removeRepository[^"]*"[^>]*>Remove<\/button>/);
-        if (removeButtonMatch) {
-            console.log('[SETTINGS] Generated remove button HTML:', removeButtonMatch[0]);
-        }
-        
-        return repoHtml;
-    }).join('');
+    for (const repo of repositories) {
+        const owner = String(repo.owner ?? '');
+        const name = String(repo.name ?? '');
+        const branch = repo.branch ? String(repo.branch) : '';
+        const status = ALLOWED_STATUSES.has(repo.status) ? repo.status : 'pending';
 
-    console.log('[SETTINGS] Complete HTML being set:', html);
-    repoContainer.innerHTML = html;
-    
-    // Debug: Check if buttons were actually created
-    const removeButtons = document.querySelectorAll('.btn-danger');
-    console.log('[SETTINGS] Found', removeButtons.length, 'remove buttons after render');
-    removeButtons.forEach((btn, index) => {
-        console.log('[SETTINGS] Remove button', index, 'onclick:', btn.getAttribute('onclick'));
-        
-        // Try clicking programmatically to test
-        console.log('[SETTINGS] Testing button', index, 'click handler...');
-        try {
-            // Test if the onclick would work
-            const onclickAttr = btn.getAttribute('onclick');
-            console.log('[SETTINGS] Would execute:', onclickAttr);
-        } catch (e) {
-            console.error('[SETTINGS] Button', index, 'onclick error:', e);
+        const item = document.createElement('div');
+        item.className = 'repo-item';
+
+        // Info section
+        const info = document.createElement('div');
+        info.className = 'repo-info';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'repo-name';
+        nameEl.textContent = `${owner}/${name}`;
+        info.appendChild(nameEl);
+
+        const statusEl = document.createElement('div');
+        statusEl.className = 'repo-status';
+
+        if (branch) {
+            statusEl.appendChild(document.createTextNode(`Branch: ${branch} • `));
         }
-    });
+
+        const indicator = document.createElement('span');
+        indicator.className = `status-indicator status-${status}`;
+        indicator.textContent = getStatusText(status);
+        statusEl.appendChild(indicator);
+
+        if (repo.lastIndexed) {
+            const ts = new Date(repo.lastIndexed);
+            const tsText = isNaN(ts.getTime()) ? '' : ts.toLocaleString();
+            if (tsText) {
+                statusEl.appendChild(document.createTextNode(` • Last indexed: ${tsText}`));
+            }
+        }
+
+        info.appendChild(statusEl);
+        item.appendChild(info);
+
+        // Actions section
+        const actions = document.createElement('div');
+        actions.className = 'repo-actions';
+
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'toggle-switch';
+        const toggleInput = document.createElement('input');
+        toggleInput.type = 'checkbox';
+        toggleInput.checked = !!repo.enabled;
+        toggleInput.addEventListener('change', () => {
+            toggleRepository(owner, name, toggleInput.checked);
+        });
+        const slider = document.createElement('span');
+        slider.className = 'slider';
+        toggleLabel.appendChild(toggleInput);
+        toggleLabel.appendChild(slider);
+        actions.appendChild(toggleLabel);
+
+        const indexBtn = document.createElement('button');
+        indexBtn.className = 'btn btn-secondary';
+        indexBtn.textContent = status === 'indexing' ? 'Indexing...' : 'Index';
+        indexBtn.disabled = status === 'indexing';
+        indexBtn.addEventListener('click', () => indexRepository(owner, name, branch));
+        actions.appendChild(indexBtn);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-danger';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => removeRepository(owner, name));
+        actions.appendChild(removeBtn);
+
+        item.appendChild(actions);
+        repoContainer.appendChild(item);
+    }
 }
 
 function getStatusText(status) {

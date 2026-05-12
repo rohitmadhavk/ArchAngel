@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AgentService } from './AgentService';
+import { getNonce } from './utils';
 
 interface Repository {
     owner: string;
@@ -60,7 +61,6 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
                 case 'authAction':
                     await this.useVSCodeAuth();
                     break;
-                // Add this case to the existing switch statement in resolveWebviewView
 
                 case 'syncRepositories':
                     await this.syncRepositoriesWithKnowledgeBase();
@@ -370,7 +370,6 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    // Add this new method for manual sync
     private async syncRepositoriesWithKnowledgeBase() {
         console.log('[SETTINGS-PROVIDER] Manually syncing repositories with knowledge base...');
         await this.sendRepositoriesToWebview();
@@ -429,14 +428,19 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'src', 'settings.js')
         );
+        const nonce = getNonce();
 
         return `<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="
+            default-src 'none'; 
+            script-src ${webview.cspSource} 'nonce-${nonce}'; 
+            style-src ${webview.cspSource} 'nonce-${nonce}';">
         <title>ArchAngel Settings</title>
-        <style>
+        <style nonce="${nonce}">
             body {
                 font-family: var(--vscode-font-family);
                 font-size: var(--vscode-font-size);
@@ -546,6 +550,9 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
                 color: var(--vscode-descriptionForeground);
                 margin-top: 10px;
             }
+            #repoContainer {
+                margin-top:20px;
+            }
         </style>
     </head>
     <body>
@@ -557,8 +564,8 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
                 <span>Checking authentication...</span>
             </div>
             <div class="auth-buttons">
-                <button class="btn btn-primary" onclick="useVSCodeAuth()">Use VS Code GitHub</button>
-                <button class="btn btn-secondary" onclick="checkAuthStatus()">Refresh Status</button>
+                <button class="btn btn-primary" id="useVSCodeAuthBtn">Use VS Code GitHub</button>
+                <button class="btn btn-secondary" id="checkAuthStatusBtn">Refresh Status</button>
             </div>
             <div class="recommendations" id="recommendations"></div>
         </div>
@@ -568,15 +575,15 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
             <h3>🚀 Quick Demo</h3>
             <p>Try indexing these popular repositories:</p>
             <div class="demo-repos">
-                <div class="demo-repo" onclick="addDemoRepo('microsoft', 'vscode')">
+                <div class="demo-repo" data-owner="microsoft" data-name="vscode">
                     <strong>microsoft/vscode</strong><br>
                     <small>VS Code source code - Large TypeScript project</small>
                 </div>
-                <div class="demo-repo" onclick="addDemoRepo('facebook', 'react')">
+                <div class="demo-repo" data-owner="facebook" data-name="react">
                     <strong>facebook/react</strong><br>
                     <small>React library - Popular JavaScript framework</small>
                 </div>
-                <div class="demo-repo" onclick="addDemoRepo('torvalds', 'linux')">
+                <div class="demo-repo" data-owner="torvalds" data-name="linux">
                     <strong>torvalds/linux</strong><br>
                     <small>Linux kernel - Large C project</small>
                 </div>
@@ -595,13 +602,13 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
             </div>
             <button class="btn btn-primary" id="addRepoBtn">Add Repository</button>
             <button class="btn btn-secondary" id="refreshAllBtn">Refresh All</button>
-            <button class="btn btn-secondary" onclick="syncRepositories()">Sync with Knowledge Base</button>
+            <button class="btn btn-secondary" id="syncRepoBtn">Sync with Knowledge Base</button>
             
-            <div id="repoContainer" style="margin-top: 20px;">
+            <div id="repoContainer">
                 <!-- Repositories will be populated here -->
             </div>
         </div>
-        <script src="${scriptUri}"></script>
+        <script src="${scriptUri}" nonce="${nonce}"></script>
     </body>
     </html>`;
     }

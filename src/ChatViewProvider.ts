@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AgentService } from './AgentService';
+import { getNonce } from './utils';
 
 export class ChatViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'archangel.chatView';
@@ -154,15 +155,19 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'src', 'chat.js')
         );
+        const nonce = getNonce();
 
         return `<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline';">
+        <meta http-equiv="Content-Security-Policy" content="
+            default-src 'none'; 
+            script-src ${webview.cspSource} 'nonce-${nonce}'; 
+            style-src ${webview.cspSource} 'nonce-${nonce}';">
         <title>ArchAngel</title>
-        <style>
+        <style nonce="${nonce}">
             body {
                 font-family: var(--vscode-font-family);
                 font-size: var(--vscode-font-size);
@@ -548,7 +553,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             <button id="sendButton" class="send-button">Send</button>
         </div>
 
-        <script src="${scriptUri}"></script>
+        <script src="${scriptUri}" nonce="${nonce}"></script>
     </body>
     </html>`;
     }

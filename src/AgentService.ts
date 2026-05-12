@@ -148,9 +148,9 @@ export class AgentService {
         const clientOptions: LanguageClientOptions = {
             documentSelector: [
                 { scheme: 'file', language: 'typescript' },
-                { scheme: 'file', language: 'typescriptreact' },  // Add this!
+                { scheme: 'file', language: 'typescriptreact' },
                 { scheme: 'file', language: 'javascript' },
-                { scheme: 'file', language: 'javascriptreact' },  // Add this!
+                { scheme: 'file', language: 'javascriptreact' },
                 { scheme: 'file', language: 'python' },
                 { scheme: 'file', language: 'csharp' },
                 { scheme: 'file', language: 'java' },
@@ -436,7 +436,6 @@ export class AgentService {
     }
 
     
-    // Add this method to the AgentService class (around line 200)
     async indexRepository(owner: string, name: string, branch?: string): Promise<boolean> {
         if (!this.client) {
             throw new Error('LSP client not started');
@@ -467,7 +466,6 @@ export class AgentService {
     }
 
 
-    // Add this method to the AgentService class
 
     async getIndexedRepositories(): Promise<string[]> {
         if (!this.client) {
